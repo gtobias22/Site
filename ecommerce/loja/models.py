@@ -12,8 +12,8 @@ class Cliente(models.Model):
     usuario = models.OneToOneField(
         User, null=True, blank=True, on_delete=models.CASCADE)
 
-    # def __str__(self):
-    #     return str(self.nome)
+    def __str__(self):
+        return str(self.nome)
 
 
 class Categoria(models.Model):
@@ -61,8 +61,8 @@ class Itemestoque(models.Model):
     tamanho = models.CharField(max_length=200, null=True, blank=True)
     quantidade = models.IntegerField(default=0)
 
-    # def __str__(self):
-    #     return f'{self.produto.nome}, Tamanho: {self.tamanho}, Cor: {self.cor.nome}'
+    def __str__(self):
+        return f'{self.produto.nome}, Tamanho: {self.tamanho}, Cor: {self.cor.nome}'
 
 
 class Endereco(models.Model):
@@ -75,8 +75,8 @@ class Endereco(models.Model):
     cliente = models.ForeignKey(
         Cliente, null=True, blank=True, on_delete=models.SET_NULL)
 
-    # def __str__(self) -> str:
-    #     return f"Cliente: {self.cliente.nome} - Rua: {self.rua} - Cidade: {self.cidade} - Estado: {self.estado}"
+    def __str__(self) -> str:
+        return f"Cliente: {self.cliente.nome} - Rua: {self.rua} - Cidade: {self.cidade} - Estado: {self.estado}"
 
 
 class Pedido(models.Model):
@@ -88,8 +88,8 @@ class Pedido(models.Model):
         Endereco, null=True, blank=True, on_delete=models.SET_NULL)
     data_finalizacao = models.DateTimeField(null=True, blank=True)
 
-    # def __str__(self):
-    #     return f"ID_Pedido: {self.id} - Finalizado: {self.finalizado}"
+    def __str__(self):
+        return f"ID_Pedido: {self.id} - Finalizado: {self.finalizado}"
 
     @property
     def quantidade_total(self):
@@ -112,8 +112,8 @@ class ItensPedido(models.Model):
     pedido = models.ForeignKey(
         Pedido, null=True, blank=True, on_delete=models.SET_NULL)
 
-    # def __str__(self) -> str:
-    #     return f"ID Pedido: {self.pedido.id} - Produto: {self.item_estoque.produto.nome}, {self.item_estoque.tamanho}, {self.item_estoque.cor.nome}"
+    def __str__(self) -> str:
+        return f"ID Pedido: {self.pedido.id} - Produto: {self.item_estoque.produto.nome}, {self.item_estoque.tamanho}, {self.item_estoque.cor.nome}"
 
     @property
     def preco_total(self):

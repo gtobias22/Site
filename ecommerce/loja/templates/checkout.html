@@ -14,29 +14,5 @@
 
     
 
-    <form action="" method="post">
-        {% csrf_token %}
-        <h3>Selecione o endereço de entrega</h3>
-        <a href=""><button>Adicionar endereço de entrega</button></a>
-        <br>
-        {% for endereco in enderecos %}
-
-            <input type="radio" name="endereco" value="{{endereco.id}}">
-            <label for="{{endereco.id}}">{{endereco.cidade}}-{{endereco.estado}}, {{endereco.rua}}, {{endereco.numero}}, {{endereco.complemento}} - {{endereco.cep}} </label>
-            <br>
-        {% endfor %}
-    
-        {% if not request.user.is_authenticated %}
-        <hr>
-            <input type="email" name="email" placeholder="email">
-
-        {% endif %}
-        <hr>
-
-        <input type="hidden" name="total" value="{{pedido.preco_total}}">
-        <button type="submit">Finalizar Pedido - {{pedido.preco_total}}</button>
-
-    </form>
-
 
 {% endblock %}
