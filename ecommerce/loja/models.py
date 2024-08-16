@@ -9,7 +9,8 @@ class Cliente(models.Model):
     email = models.CharField(max_length=200, null=True, blank=True)
     telefone = models.CharField(max_length=200, null=True, blank=True)
     id_sessao = models.CharField(max_length=200, null=True, blank=True)
-    usuario = models.OneToOneField(User, null=True, blank=True, on_delete=models.CASCADE)
+    usuario = models.OneToOneField(
+        User, null=True, blank=True, on_delete=models.CASCADE)
 
     def __str__(self):
         return str(self.nome)
@@ -17,6 +18,7 @@ class Cliente(models.Model):
 
 class Categoria(models.Model):
     nome = models.CharField(max_length=200, null=True, blank=True)
+    slug = models.CharField(max_length=200, null=True, blank=True)
 
     def __str__(self):
         return str(self.nome)
@@ -24,6 +26,7 @@ class Categoria(models.Model):
 
 class Tipo(models.Model):
     nome = models.CharField(max_length=200, null=True, blank=True)
+    slug = models.CharField(max_length=200, null=True, blank=True)
 
     def __str__(self):
         return str(self.nome)
@@ -79,10 +82,12 @@ class Endereco(models.Model):
 
 
 class Pedido(models.Model):
-    cliente = models.ForeignKey(Cliente, null=True, blank=True, on_delete=models.SET_NULL)
+    cliente = models.ForeignKey(
+        Cliente, null=True, blank=True, on_delete=models.SET_NULL)
     finalizado = models.BooleanField(default=False)
     codigo_transacao = models.CharField(max_length=400, null=True, blank=True)
-    endereco = models.ForeignKey(Endereco, null=True, blank=True, on_delete=models.SET_NULL)
+    endereco = models.ForeignKey(
+        Endereco, null=True, blank=True, on_delete=models.SET_NULL)
     data_finalizacao = models.DateTimeField(null=True, blank=True)
 
     def __str__(self):

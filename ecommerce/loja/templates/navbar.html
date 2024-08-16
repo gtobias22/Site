@@ -8,4 +8,25 @@
     <a href="{% url 'carrinho' %}">Carrinho</a>
     <img src="{% static 'images/carrinho.png' %}" width="25" height="25">
     {{quantidade_produtos_carrinho}}
+
+    <div >
+        {% for categoria in categorias %}
+        <div>
+            <a href="{% url 'loja' %}{{categoria.slug}}">{{categoria.nome}}</a>
+            <br>
+
+            {% for tipo in tipos %}
+
+                <a href="{% url 'loja' %}{{categoria.slug}}-{{tipo.slug}}">{{tipo.nome}}</a>
+    
+            {% endfor %}
+            <br>
+            <br>
+        </div>
+        {% endfor %}
+
+
+
+
+    </div>
 </nav>
