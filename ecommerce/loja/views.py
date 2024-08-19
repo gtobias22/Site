@@ -15,7 +15,10 @@ def homepage(request):
 def loja(request, filtro=None):
     produtos = Produto.objects.filter(ativo=True)
     produtos = filtrar_produtos(produtos, filtro)
-    context = {"produtos": produtos}
+    tamanhos = []
+    minino = 0
+    maximo = 1000
+    context = {"produtos": produtos, "minimo":minimo, "maximo":maximo, "tamanhos":tamanhos}
     return render(request, 'loja.html', context)
 
 
