@@ -1,7 +1,7 @@
 from django.shortcuts import render, redirect
 from .models import *
 import uuid
-from .utils import filtrar_produtos
+from .utils import filtrar_produtos, preco_minimo_maximo
 
 # Create your views here.
 
@@ -15,10 +15,29 @@ def homepage(request):
 def loja(request, filtro=None):
     produtos = Produto.objects.filter(ativo=True)
     produtos = filtrar_produtos(produtos, filtro)
-    tamanhos = []
-    minino = 0
-    maximo = 1000
-    context = {"produtos": produtos, "minimo":minimo, "maximo":maximo, "tamanhos":tamanhos}
+    # Aplicar os filtros do formulário:
+    if request.method == "POST":
+        dados = request.POST.dict()
+        produtos = produtos.filter(preco__gte=dados.get("preco_minimo"), preco__lte=dados.get("preco_maximo"))
+        
+        if "tamanho" in dados:
+            itens = Itemestoque.objects.filter(produto__in=produtos, tamanho=dados.get("tamanho"))
+            ids_produtos = itens.values_list("produto", flat=True).distinct()
+            produtos = produtos.filter(id__in=ids_produtos)
+
+        if "tipo" in dados:
+            produtos = produtos.filter(tipo__slug=dados.get("tipo"))
+
+        if "categoria" in dados:
+            produtos = produtos.filter(categoria__slug=dados.get("categoria"))
+
+    itens = Itemestoque.objects.filter(quantidade__gt=0, produto__in=produtos)
+    tamanhos = itens.values_list("tamanho", flat=True).distinct()
+    ids_categorias = produtos.values_list("categoria", flat=True).distinct()
+    categorias = Categoria.objects.filter(id__in=ids_categorias)
+    minimo, maximo = preco_minimo_maximo(produtos)
+    context = {"produtos": produtos, "minimo": minimo,
+               "maximo": maximo, "tamanhos": tamanhos, "categorias":categorias}
     return render(request, 'loja.html', context)
 
 
@@ -155,6 +174,7 @@ def checkout(request):
 
     return render(request, 'checkout.html', context)
 
+
 def adicionar_endereco(request):
     if request.method == "POST":
         # Pegar o cliente
@@ -163,17 +183,20 @@ def adicionar_endereco(request):
         else:
             if request.COOKIES.get("id_sessao"):
                 id_sessao = request.COOKIES.get("id_sessao")
-                cliente, criado = Cliente.objects.get_or_create(id_sessao=id_sessao)
+                cliente, criado = Cliente.objects.get_or_create(
+                    id_sessao=id_sessao)
             else:
                 return redirect('loja')
         # Tratar o envio do formulário
         dados = request.POST.dict()
-        endereco = Endereco.objects.create(cliente=cliente, rua=dados.get("rua"), numero=int(dados.get("numero")), estado=dados.get("estado"), cidade=dados.get("cidade"), cep=dados.get("cep"), complemento=dados.get("complemento"))
+        endereco = Endereco.objects.create(cliente=cliente, rua=dados.get("rua"), numero=int(dados.get("numero")), estado=dados.get(
+            "estado"), cidade=dados.get("cidade"), cep=dados.get("cep"), complemento=dados.get("complemento"))
         endereco.save()
         return redirect('checkout')
     else:
         context = {}
         return render(request, 'adicionar_endereco.html', context)
+
 
 def minha_conta(request):
     return render(request, 'usuario/minha_conta.html')
