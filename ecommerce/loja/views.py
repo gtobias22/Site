@@ -1,7 +1,10 @@
 from django.shortcuts import render, redirect
 from .models import *
 import uuid
-from .utils import filtrar_produtos, preco_minimo_maximo
+from .utils import filtrar_produtos, preco_minimo_maximo, ordenar_produtos
+from django.contrib.auth import login, logout, authenticate
+from django.core.validators import validate_email
+from django.core.exceptions import ValidationError
 
 # Create your views here.
 
@@ -18,10 +21,12 @@ def loja(request, filtro=None):
     # Aplicar os filtros do formulário:
     if request.method == "POST":
         dados = request.POST.dict()
-        produtos = produtos.filter(preco__gte=dados.get("preco_minimo"), preco__lte=dados.get("preco_maximo"))
-        
+        produtos = produtos.filter(preco__gte=dados.get(
+            "preco_minimo"), preco__lte=dados.get("preco_maximo"))
+
         if "tamanho" in dados:
-            itens = Itemestoque.objects.filter(produto__in=produtos, tamanho=dados.get("tamanho"))
+            itens = Itemestoque.objects.filter(
+                produto__in=produtos, tamanho=dados.get("tamanho"))
             ids_produtos = itens.values_list("produto", flat=True).distinct()
             produtos = produtos.filter(id__in=ids_produtos)
 
@@ -36,8 +41,12 @@ def loja(request, filtro=None):
     ids_categorias = produtos.values_list("categoria", flat=True).distinct()
     categorias = Categoria.objects.filter(id__in=ids_categorias)
     minimo, maximo = preco_minimo_maximo(produtos)
+    ordem = request.GET.get("ordem", "menor-preco")
+    print(ordem)
+    # Ordenar os produtos
+    produtos = ordenar_produtos(produtos, ordem)
     context = {"produtos": produtos, "minimo": minimo,
-               "maximo": maximo, "tamanhos": tamanhos, "categorias":categorias}
+               "maximo": maximo, "tamanhos": tamanhos, "categorias": categorias}
     return render(request, 'loja.html', context)
 
 
@@ -202,7 +211,83 @@ def minha_conta(request):
     return render(request, 'usuario/minha_conta.html')
 
 
-def login(request):
-    return render(request, 'usuario/login.html')
+def fazer_login(request):
+    erro = False
+    if request.user.is_authenticated:
+        return redirect('loja')
+
+    if request.method == "POST":
+        dados = request.POST.dict()
+        if "email" in dados and "senha" in dados:
+            email = dados.get("email")
+            senha = dados.get("senha")
+            usuario = authenticate(request, username=email, password=senha)
+
+            if usuario:
+                # Fazer login
+                login(request, usuario)
+                return redirect('loja')
+            else:
+                erro = True
+        else:
+            erro = True
+
+    context = {"erro": erro}
+    return render(request, 'usuario/login.html', context)
+
+
+def criar_conta(request):
+    erro = None
+    if request.user.is_authenticated:
+        return redirect('loja')
+
+    if request.method == "POST":
+        dados = request.POST.dict()
+        if "email" in dados and "senha" in dados and "confirmacao_senha" in dados:
+            # Criar conta
+            email = dados.get("email")
+            senha = dados.get("senha")
+            confirmacao_senha = dados.get("confirmacao_senha")
+            try:
+                validate_email(email)
+            except ValidationError:
+                erro = "Email inválido"
+            if senha == confirmacao_senha:
+                # Criar conta
+                usuario, criado = User.objects.get_or_create(
+                    username=email, email=email)
+                if not criado:
+                    erro = "usuario_existente"
+                else:
+                    usuario.set_password(senha)
+                    usuario.save()
+
+                    # Fazer o login do usuário
+                    usuario = authenticate(request, username=email, password=senha)
+                    login(request, usuario)
+
+                    # Criar o cliente
+                    # Verificar se existe o id_sessao nos cookies do navegador
+                    if request.COOKIES.get("id_sessao"):
+                        id_sessao = request.COOKIES.get("id_sessao")
+                        cliente, criado = Cliente.objects.get_or_create(
+                            id_sessao=id_sessao)
+                    else:
+                        cliente, criado = Cliente.objects.get_or_create(
+                            email=email)
+                    cliente.usuario = usuario
+                    cliente.email = email
+                    cliente.save()
+                    return redirect("loja")
+
+            else:
+                erro = "senhas_diferentes"
+
+    else:
+        erro = "preenchimento"
+
+    context = {"erro": erro}
+    return render(request, 'usuario/criar_conta.html', context)
 
 # TODO Sempre que um usuario criar uma conta no nosso site a gente cria um cliente para ele
+# TODO Quando a gente for criar o usuário colocar o username dele igual o email

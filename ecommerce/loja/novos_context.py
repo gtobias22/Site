@@ -1,4 +1,4 @@
-from .models import Pedido, ItensPedido, Categoria, Tipo
+from .models import Pedido, ItensPedido, Categoria, Tipo, Cliente
 
 
 def carrinho(request):
@@ -7,15 +7,17 @@ def carrinho(request):
         cliente = request.user.cliente
 
     else:
-        return {"quantidade_produtos_carrinho": quantidade_produtos_carrinho}
-    
-    pedido, criado = Pedido.objects.get_or_create(cliente=cliente, finalizado=False)
+        if request.COOKIES.get("id_sessao"):
+            id_sessao = request.COOKIES.get("id_sessao")
+            cliente, criado = Cliente.objects.get_or_create(id_sessao=id_sessao)
+        else:
+            return {"quantidade_produtos_carrinho": quantidade_produtos_carrinho}
 
-    # Quantos produtos tem no pedido do usuário
+    pedido, criado = Pedido.objects.get_or_create(
+        cliente=cliente, finalizado=False)
     itens_pedido = ItensPedido.objects.filter(pedido=pedido)
     for item in itens_pedido:
         quantidade_produtos_carrinho += item.quantidade
-        
     return {"quantidade_produtos_carrinho": quantidade_produtos_carrinho}
 
 

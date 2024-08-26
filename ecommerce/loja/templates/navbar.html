@@ -3,11 +3,6 @@
 <nav>
     <a href="{% url 'homepage' %}">Reserva</a>
     <a href="{% url 'loja' %}">Loja</a>
-    <a href="{% url 'login' %}">Login</a>
-    <a href="{% url 'minha_conta' %}">Minha Conta</a>
-    <a href="{% url 'carrinho' %}">Carrinho</a>
-    <img src="{% static 'images/carrinho.png' %}" width="25" height="25">
-    {{quantidade_produtos_carrinho}}
 
     <div >
         {% for categoria in categorias_navegacao %}
@@ -26,7 +21,19 @@
         {% endfor %}
 
 
-
-
     </div>
+
+    {% if request.user.is_authenticated %}
+        <a href="{% url 'minha_conta' %}">Minha Conta</a>
+    
+    {% else %}
+        <a href="{% url 'fazer_login' %}">Login</a>
+    
+    {% endif %}
+    
+    <a href="{% url 'carrinho' %}">Carrinho</a>
+    <img src="{% static 'images/carrinho.png' %}" width="25" height="25">
+    {{quantidade_produtos_carrinho}}
+
+
 </nav>
