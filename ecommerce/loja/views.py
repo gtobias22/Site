@@ -3,6 +3,7 @@ from .models import *
 import uuid
 from .utils import filtrar_produtos, preco_minimo_maximo, ordenar_produtos
 from django.contrib.auth import login, logout, authenticate
+from django.contrib.auth.decorators import login_required
 from django.core.validators import validate_email
 from django.core.exceptions import ValidationError
 
@@ -206,10 +207,65 @@ def adicionar_endereco(request):
         context = {}
         return render(request, 'adicionar_endereco.html', context)
 
-
+@login_required
 def minha_conta(request):
-    return render(request, 'usuario/minha_conta.html')
+    erro = None
+    alterado = False
+    if request.method == "POST":
+        dados = request.POST.dict()
+        if "senha_atual" in dados:
+            # Usuario esta modificando a senha
+            senha_atual = dados.get("senha_atual")
+            nova_senha = dados.get("nova_senha")
+            nova_senha_confirmacao = dados.get("nova_senha_confirmacao")
+            if nova_senha == nova_senha_confirmacao:
+                # Verificar se a senha atual está certa
+                usuario = authenticate(request, username=request.user.email, password=senha_atual)
+                if usuario:
+                    # Senha Correta
+                    usuario.set_password(nova_senha)
+                    usuario.save()
+                    alterado = True
+                else:
+                    # Senha incorreta
+                    erro = "senha_incorreta"
+            else:
+                erro = "senhas_diferentes"
+            
 
+        elif "email" in dados:
+            #Usuario esta modificando os dados pessoais
+            email = dados.get("email")
+            telefone = dados.get("telefone")
+            nome = dados.get("nome")
+            if email != request.user.email:
+                # Tentando modificar o email
+                usuarios = User.objects.filter(email=email)
+                if len(usuarios) > 0:
+                    erro = "email_existente"
+            if not erro:
+                cliente = request.user.cliente
+                cliente.email = email
+                request.user.email = email
+                request.user.username = email
+                cliente.nome = nome
+                cliente.telefone = telefone
+                cliente.save()
+                request.user.save()
+                alterado = True
+
+        else:
+            erro = "formulario_invalido"
+
+    context = {"erro":erro, "alterado":alterado}
+    return render(request, 'usuario/minha_conta.html', context)
+
+@login_required
+def meus_pedidos(request):
+    cliente= request.user.cliente
+    pedidos = Pedido.objects.filter(finalizado=True, cliente=cliente).order_by("-data_finalizacao")
+    context = {"pedidos": pedidos}
+    return render(request, 'usuario/meus_pedidos.html', context)
 
 def fazer_login(request):
     erro = False
@@ -251,7 +307,7 @@ def criar_conta(request):
             try:
                 validate_email(email)
             except ValidationError:
-                erro = "Email inválido"
+                erro = "email_invalido"
             if senha == confirmacao_senha:
                 # Criar conta
                 usuario, criado = User.objects.get_or_create(
@@ -283,11 +339,13 @@ def criar_conta(request):
             else:
                 erro = "senhas_diferentes"
 
-    else:
-        erro = "preenchimento"
+        else:
+            erro = "preenchimento"
 
     context = {"erro": erro}
     return render(request, 'usuario/criar_conta.html', context)
 
-# TODO Sempre que um usuario criar uma conta no nosso site a gente cria um cliente para ele
-# TODO Quando a gente for criar o usuário colocar o username dele igual o email
+@login_required
+def fazer_logout(request):
+    logout(request)
+    return redirect('fazer_login')

@@ -1,4 +1,5 @@
 from django.urls import path
+from django.contrib.auth import views
 from .views import *
 
 urlpatterns = [
@@ -12,7 +13,18 @@ urlpatterns = [
     path('adicionarcarrinho/<int:id_produto>', adicionar_carrinho, name='adicionar_carrinho'),
     path('removercarrinho/<int:id_produto>', remover_carrinho, name='remover_carrinho'),
     path('adicionarendereco/', adicionar_endereco, name='adicionar_endereco'),
+
     path('minhaconta/', minha_conta, name='minha_conta'),
-    path('fazer_login/', fazer_login, name='fazer_login'),
+    path('meuspedidos/', meus_pedidos, name='meus_pedidos'),
+    path('fazerlogin/', fazer_login, name='fazer_login'),
     path('criarconta/', criar_conta, name='criar_conta'),
+    path('fazerlogout/', fazer_logout, name='fazer_logout'),
+
+    path("password_change/", views.PasswordChangeView.as_view(), name="password_change"),
+    path("password_change/done/", views.PasswordChangeDoneView.as_view(), name="password_change_done"),
+    
+    path("password_reset/", views.PasswordResetView.as_view(), name="password_reset"),
+    path("password_reset/done/", views.PasswordResetDoneView.as_view(), name="password_reset_done"),
+    path("reset/<uidb64>/<token>/", views.PasswordResetConfirmView.as_view(), name="password_reset_confirm"),
+    path("reset/done/", views.PasswordResetCompleteView.as_view(), name="password_reset_complete"),
 ]

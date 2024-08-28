@@ -45,9 +45,10 @@ class Produto(models.Model):
 
     def __str__(self):
         return f"Nome: {self.nome}, Categoria: {self.categoria}, Tipo: {self.tipo}, Preço: {self.preco}"
-    
+
     def total_vendas(self):
-        itens = ItensPedido.objects.filter(pedido__finalizado=True, item_estoque__produto=self.id)
+        itens = ItensPedido.objects.filter(
+            pedido__finalizado=True, item_estoque__produto=self.id)
         total = sum([item.quantidade for item in itens])
         return total
 
@@ -110,6 +111,11 @@ class Pedido(models.Model):
         itens_pedido = ItensPedido.objects.filter(pedido__id=self.id)
         preco = sum([item.preco_total for item in itens_pedido])
         return preco
+
+    @property
+    def itens(self):
+        itens_pedido = ItensPedido.objects.filter(pedido__id=self.id)
+        return itens_pedido
 
 
 class ItensPedido(models.Model):

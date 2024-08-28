@@ -32,7 +32,7 @@
     {% endif %}
     
     <a href="{% url 'carrinho' %}">Carrinho</a>
-    <img src="{% static 'images/carrinho.png' %}" width="25" height="25">
+    <a href="{% url 'carrinho' %}"><img src="{% static 'images/carrinho.png' %}" width="25" height="25"></a>
     {{quantidade_produtos_carrinho}}
 
 
